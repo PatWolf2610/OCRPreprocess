@@ -1,0 +1,5 @@
+augument_img/*
+augument_xml/*
+images/*
+Annotations/*
+__pycache__
