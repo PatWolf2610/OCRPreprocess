@@ -4,15 +4,11 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-
-def rotate_img(image_path, angle=0):
+import random 
+import tqdm
+def rotate_img(image_path,dst_img_dir, angle=0):
     if angle > 180 or angle < -180:
         angle = np.sign(-angle)*(360-abs(angle))
-    # print(dst_img_path)
-    # load the image and show it
-    # cv2.imshow("Original", image)
-    # grab the dimensions of the image and calculate the center of the
-    # image
     img_name = os.path.split(image_path)[-1]
     image = cv2.imread(image_path)
     (h, w) = image.shape[:2]
@@ -27,12 +23,10 @@ def rotate_img(image_path, angle=0):
     M[1, 2] += (nH / 2) - cY
     rotated = cv2.warpAffine(image, M, (nW, nH))
     plt.imshow(cv2.cvtColor(rotated,cv2.COLOR_BGR2RGB))
-    # cv2.imshow("Rotated", rotated)
-    # cv2.waitKey(0)
+
     
-    cv2.imwrite(f"augument_img/{str(angle)}_rotated_{img_name}", rotated)
-    rotated_name = os.path.split(f"augument_img/{str(angle)}_rotated_{img_name}")[-1]
-    return rotated_name,M
+    cv2.imwrite(f"{dst_img_dir}/{str(angle)}_rotated_{img_name}", rotated)
+    return M
 
 
 def get_coor_rotate(v,M_rot):
@@ -43,16 +37,10 @@ def get_coor_rotate(v,M_rot):
   (new_x,new_y) = (calculated[0],calculated[1])
   return (int(new_x),int(new_y))
 
-def rotate_xml(xml_path, M_rot, angle):
+def rotate_xml(xml_path,dst_xml_dir ,M_rot, angle):
     tree = ET.parse(xml_path)
     xmlroot = tree.getroot()
     img_name,extension = xmlroot.find('filename').text.split('.')[0],xmlroot.find('filename').text.split('.')[-1]
-    # filename = xmlroot.find('filename')
-    # filename.text = img_name
-
-    # filepath = xmlroot.find('path')
-    # if filepath:
-    #     filepath.text = img_name
     for object in xmlroot.findall('object'):
         name = object.find('name')
         bndbox = object.find('bndbox')
@@ -96,7 +84,7 @@ def rotate_xml(xml_path, M_rot, angle):
         xmax.text = str(new_xmax)
         ymax = bndbox.find('ymax')
         ymax.text = str(new_ymax)
-    dst_xml_path = f"augument_xml/{str(angle)}_rotated_{img_name}.xml"
+    dst_xml_path = f"{dst_xml_dir}/{str(angle)}_rotated_{img_name}.xml"
     tree.write(dst_xml_path)
     rotate_tree = ET.parse(dst_xml_path)
     rotated_root = rotate_tree.getroot()
@@ -106,9 +94,13 @@ def rotate_xml(xml_path, M_rot, angle):
     path.text = f"{str(angle)}_rotated_{img_name}.{extension}"
     rotate_tree.write(dst_xml_path)
 
-if __name__ == 'main':
-    XML_DIR = 'Annotations/front_crop'
+if __name__ == "__main__":
+    XML_DIR = 'Annotations/front_crop_xml'
     IMG_DIR = 'images/front_crop'
+    IMG_DST = 'augument_img'
+    XML_DST = 'augument_xml'
+    print('safafwevwevqwefwevwqe')
+    print(len(glob.glob(f"{XML_DIR}/*.xml")))
     for xml_path in glob.glob(f"{XML_DIR}/*.xml"):
         tree  = ET.parse(xml_path)
         root = tree.getroot()
@@ -116,6 +108,7 @@ if __name__ == 'main':
         filename = tree.find('filename').text
         short_name,extension = filename.split('.')[0],filename.split('.')[-1]
         angles = [0,5,-5,90,-90,180,175,-175]
-        for angle in angles:
-            rotated_name,M=rotate_img(f"images/front_crop/{short_name}.{extension}",angle)
-            rotate_xml(f"Annotations/front_crop/{short_name}.xml",M,angle)
+        for angle in random.choices(angles,k = 1):
+            rotated_name,M=rotate_img(f"{IMG_DIR}/{short_name}.{extension}",IMG_DST,angle)
+            rotate_xml(f"{XML_DIR}/{short_name}.xml",XML_DST,M,angle)
+    
