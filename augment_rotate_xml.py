@@ -99,8 +99,6 @@ if __name__ == "__main__":
     IMG_DIR = 'images/front_crop'
     IMG_DST = 'augument_img'
     XML_DST = 'augument_xml'
-    print('safafwevwevqwefwevwqe')
-    print(len(glob.glob(f"{XML_DIR}/*.xml")))
     for xml_path in glob.glob(f"{XML_DIR}/*.xml"):
         tree  = ET.parse(xml_path)
         root = tree.getroot()
